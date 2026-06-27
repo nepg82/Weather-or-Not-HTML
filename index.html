@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Weather Dashboard v4</title>
+<style>
+html,body{height:100%;margin:0}
+body{
+  background:#121212;color:#eee;font-family:Arial,sans-serif;
+  display:flex;flex-direction:column;gap:8px;padding:8px;box-sizing:border-box;
+}
+.card{background:#1e1e1e;border-radius:12px;padding:10px}
+input,button{padding:8px;border:none;border-radius:8px;font-size:16px}
+a{color:#7db7ff;text-decoration:none;margin-right:12px}
+.small{font-size:.9em;color:#bbb}
+.main{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0}
+.panel{flex:1;display:flex;flex-direction:column;min-height:0}
+.panel h3{margin:0 0 8px 0}
+.list{overflow-y:auto;min-height:0}
+.row{
+ display:flex;align-items:center;gap:8px;
+ padding:6px 0;border-bottom:1px solid #333;
+}
+.row img{width:36px;height:36px}
+.time{width:45px}
+.temp{width:50px}
+.rain{width:55px}
+.day{width:75px}
+</style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1976d2">
+<link rel="icon" href="icon-192.png">
+
+</head>
+<body>
+
+<div class="card">
+ZIP:
+<input id="zip" value="14108">
+<button onclick="loadWeather()">Refresh</button>
+<div class="small">
+<a href="#" onclick="setZip('14108');return false;">Home (14108)</a>
+<a href="#" onclick="setZip('21842');return false;">OCMD (21842)</a>
+</div>
+</div>
+
+<div id="current" class="card">Loading...</div>
+
+<div class="main">
+  <div class="card panel">
+    <h3>Next 24 Hours</h3>
+    <div id="hourly" class="list"></div>
+  </div>
+
+  <div class="card panel">
+    <h3>Next 7 Days</h3>
+    <div id="daily" class="list"></div>
+  </div>
+</div>
+
+<script>
+const zipInput=document.getElementById('zip');
+zipInput.value=localStorage.getItem('weatherZip') || '14108';
+
+function setZip(z){
+  zipInput.value=z;
+  loadWeather();
+}
+
+function shortHour(s){
+  let d=new Date(s);
+  let h=d.getHours();
+  let ap=h>=12?'p':'a';
+  h=h%12;
+  if(h===0) h=12;
+  return h+ap;
+}
+
+async function loadWeather(){
+  try{
+    localStorage.setItem('weatherZip',zipInput.value);
+
+        const geo=await fetch(
+      `https://nominatim.openstreetmap.org/search?postalcode=${zipInput.value}&country=USA&format=jsonv2&limit=1&addressdetails=1`
+    );
+    const places=await geo.json();
+
+    if(!places.length) throw new Error('ZIP not found');
+
+    const lat=places[0].lat;
+    const lon=places[0].lon;
+
+    const point=await (await fetch(
+      `https://api.weather.gov/points/${lat},${lon}`
+    )).json();
+
+    const hourly=(await (await fetch(
+      point.properties.forecastHourly
+    )).json()).properties.periods;
+
+    const daily=(await (await fetch(
+      point.properties.forecast
+    )).json()).properties.periods;
+
+    // Prefer clean town/city name from structured address
+    const addr = places[0].address || {};
+    const locationName = addr.town || addr.city || addr.village || addr.county || 
+                        places[0].display_name.split(',')[1]?.trim() || 
+                        places[0].display_name;
+
+    document.getElementById('current').innerHTML=`
+      <div style="display:flex; align-items:center; gap:16px;">
+        <img src="${hourly[0].icon}" width="64" height="64">
+        <div style="font-size:32px; font-weight:bold; line-height:1;">${hourly[0].temperature}°F</div>
+        
+        <div style="flex:1; line-height:1.3;">
+          <div>${locationName}</div>
+          <div>${hourly[0].shortForecast} &nbsp;&nbsp; ${hourly[0].windDirection} ${hourly[0].windSpeed}</div>
+        </div>
+      </div>
+    `;
+
+    let h='';
+    hourly.slice(0,24).forEach(p=>{
+      h+=`
+      <div class="row" style="flex-direction:column; align-items:stretch; gap:4px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="time"><b>${shortHour(p.startTime)}</b></div>
+          <img src="${p.icon}">
+          <div class="temp">${p.temperature}°</div>
+          <div class="rain">${p.probabilityOfPrecipitation?.value || 0}%</div>
+          <div>${p.windDirection} ${p.windSpeed}</div>
+        </div>
+        <div class="small" style="padding-left: 53px;">${p.shortForecast}</div>
+      </div>`;
+    });
+    document.getElementById('hourly').innerHTML=h;
+    
+    let days = [];
+    // Skip today (first period) and start from tomorrow
+    for(let i = 1; i < daily.length - 1 && days.length < 7; i += 2){
+      let day = daily[i];      // daytime
+      let night = daily[i+1];  // nighttime
+
+      // Get short day name + date (e.g. "F 26")
+      let date = new Date(day.startTime);
+      let dayLetter = date.toLocaleString('en-US', {weekday: 'narrow'});
+      let dayNum = date.getDate();
+
+      days.push({
+        name: `${dayLetter} ${dayNum}`,
+        high: day.temperature,
+        low: night ? night.temperature : '-',
+        rain: Math.max(
+          day.probabilityOfPrecipitation?.value || 0,
+          night?.probabilityOfPrecipitation?.value || 0
+        ),
+        icon: day.icon,
+        wind: day.windDirection + ' ' + day.windSpeed,
+        forecast: day.shortForecast
+      });
+    }
+
+    let d = '';
+    days.forEach(x => {
+      d += `
+      <div class="row" style="flex-direction:column; align-items:stretch; gap:4px;">
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div class="day"><b>${x.name}</b></div>
+          <img src="${x.icon}">
+          <div>${x.high}°/${x.low}°</div>
+          <div class="rain">${x.rain}%</div>
+          <div>${x.wind}</div>
+        </div>
+        <div class="small" style="padding-left: 85px;">${x.forecast}</div>
+      </div>`;
+    });
+
+    document.getElementById('daily').innerHTML = d;
+  }catch(err){
+    document.getElementById('current').innerHTML='Error: '+err.message;
+  }
+}
+
+loadWeather();
+</script>
+
+<script>
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./service-worker.js');
+}
+</script>
+
+</body>
+</html>
