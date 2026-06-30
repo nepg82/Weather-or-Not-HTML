@@ -61,6 +61,21 @@ ZIP:
 </div>
 
 <script>
+
+function weatherEmoji(text = "") {
+  text = text.toLowerCase();
+
+  if (text.includes("thunder")) return "⛈️";
+  if (text.includes("rain") || text.includes("showers")) return "🌧️";
+  if (text.includes("snow")) return "❄️";
+  if (text.includes("sleet") || text.includes("freezing")) return "🌨️";
+  if (text.includes("fog") || text.includes("mist")) return "🌫️";
+  if (text.includes("cloud")) return "☁️";
+  if (text.includes("sunny") || text.includes("clear")) return "☀️";
+
+  return "🌡️";
+}
+  
 const zipInput=document.getElementById('zip');
 zipInput.value=localStorage.getItem('weatherZip') || '14108';
 
@@ -112,7 +127,7 @@ async function loadWeather(){
 
     document.getElementById('current').innerHTML=`
       <div style="display:flex; align-items:center; gap:16px;">
-        <img src="${hourly[0].icon}" width="64" height="64">
+        <div style="font-size:48px;">${weatherEmoji(hourly[0].shortForecast)}</div>
         <div style="font-size:32px; font-weight:bold; line-height:1;">${hourly[0].temperature}°F</div>
         
         <div style="flex:1; line-height:1.3;">
@@ -128,7 +143,7 @@ async function loadWeather(){
       <div class="row" style="flex-direction:column; align-items:stretch; gap:4px;">
         <div style="display:flex; align-items:center; gap:8px;">
           <div class="time"><b>${shortHour(p.startTime)}</b></div>
-          <img src="${p.icon}">
+          <div style="font-size:24px;">${weatherEmoji(p.shortForecast)}</div>
           <div class="temp">${p.temperature}°</div>
           <div class="rain">${p.probabilityOfPrecipitation?.value || 0}%</div>
           <div>${p.windDirection} ${p.windSpeed}</div>
@@ -169,7 +184,7 @@ async function loadWeather(){
       <div class="row" style="flex-direction:column; align-items:stretch; gap:4px;">
         <div style="display:flex; align-items:center; gap:8px;">
           <div class="day"><b>${x.name}</b></div>
-          <img src="${x.icon}">
+          <div style="font-size:28px;">${weatherEmoji(x.forecast)}</div>
           <div>${x.high}°/${x.low}°</div>
           <div class="rain">${x.rain}%</div>
           <div>${x.wind}</div>
