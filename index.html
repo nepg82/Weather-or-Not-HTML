@@ -22,32 +22,26 @@ a{color:#7db7ff;text-decoration:none;margin-right:12px}
  display:flex;align-items:center;gap:8px;
  padding:6px 0;border-bottom:1px solid #333;
 }
-.row img{width:36px;height:36px}
-.time{width:45px}
-.temp{width:50px}
-.rain{width:55px}
-.day{width:75px}
 
-.header .time,
-.header .temp,
-.header .rain,
-.header .day,
-.header .sky{
-  width: auto;
-  font-weight: bold;
+.table-row{
+  display:grid;
+  grid-template-columns: 55px 70px 40px 70px 1fr;
+  align-items:center;
+  gap:8px;
+  padding:6px 0;
+  border-bottom:1px solid #333;
 }
-  
-.header{
+
+.table-header{
   position: sticky;
   top: 0;
   background:#1e1e1e;
   font-size:12px;
   color:#aaa;
+  font-weight:bold;
   z-index:5;
   padding:4px 0;
 }
-
-.sky{width:40px;text-align:center;}
   
 </style>
 
@@ -73,25 +67,25 @@ ZIP:
 <div class="main">
   <div class="card panel">
     <h3>Next 24 Hours</h3>
-    <div class="row header">
-  <div class="time">Time</div>
-  <div class="temp">Temp</div>
-  <div class="sky">Sky</div>
-  <div class="rain">Rain %</div>
-  <div>Wind</div>
-</div>
+      <div class="table-row table-header">
+        <div>Time</div>
+        <div>Temp</div>
+        <div>Sky</div>
+        <div>Rain %</div>
+        <div>Wind</div>
+    </div>
     <div id="hourly" class="list"></div>
   </div>
 
   <div class="card panel">
     <h3>Next 7 Days</h3>
-    <div class="row header">
-  <div class="day">Day</div>
-  <div>Hi/Lo</div>
-  <div class="sky">Sky</div>
-  <div class="rain">Rain %</div>
-  <div>Wind</div>
-</div>
+    <div class="table-row table-header">
+        <div>Day</div>
+        <div>Hi/Lo</div>
+        <div>Sky</div>
+        <div>Rain %</div>
+        <div>Wind</div>
+    </div>
     <div id="daily" class="list"></div>
   </div>
 </div>
@@ -177,15 +171,18 @@ let h = '';
 
 hourly.slice(0,24).forEach(p => {
   h += `
-  <div class="row" style="flex-direction:column; align-items:stretch; gap:4px;">
-    <div style="display:flex; align-items:center; gap:8px;">
-      <div class="time"><b>${shortHour(p.startTime)}</b></div>
-      <div class="temp">${p.temperature}°</div>
+  <div>
+    <div class="table-row">
+      <div>${shortHour(p.startTime)}</div>
+      <div>${p.temperature}°</div>
       <div class="sky">${weatherEmoji(p.shortForecast)}</div>
-      <div class="rain">${p.probabilityOfPrecipitation?.value || 0}%</div>
+      <div>${p.probabilityOfPrecipitation?.value || 0}%</div>
       <div>${p.windDirection} ${p.windSpeed}</div>
     </div>
-    <div class="small" style="padding-left: 53px;">${p.shortForecast}</div>
+
+    <div class="small" style="padding:2px 0 6px 0; margin-left:8px;">
+      ${p.shortForecast}
+    </div>
   </div>`;
 });
 
@@ -210,28 +207,32 @@ document.getElementById('hourly').innerHTML = h;
           day.probabilityOfPrecipitation?.value || 0,
           night?.probabilityOfPrecipitation?.value || 0
         ),
-        icon: day.icon,
         wind: day.windDirection + ' ' + day.windSpeed,
         forecast: day.shortForecast
       });
     }
 
-    let d = '';
-    days.forEach(x => {
-      d += `
-      <div class="row" style="flex-direction:column; align-items:stretch; gap:4px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <div class="day"><b>${x.name}</b></div>
-          <div style="font-size:28px;">${weatherEmoji(x.forecast)}</div>
-          <div>${x.high}°/${x.low}°</div>
-          <div class="rain">${x.rain}%</div>
-          <div>${x.wind}</div>
-        </div>
-        <div class="small" style="padding-left: 85px;">${x.forecast}</div>
-      </div>`;
-    });
+let d = '';
 
-    document.getElementById('daily').innerHTML = d;
+days.forEach(x => {
+  d += `
+  <div>
+    <div class="table-row">
+      <div>${x.name}</div>
+      <div>${x.high}°/${x.low}°</div>
+      <div class="sky">${weatherEmoji(x.forecast)}</div>
+      <div>${x.rain}%</div>
+      <div>${x.wind}</div>
+    </div>
+
+    <div class="small" style="padding:2px 0 6px 0; margin-left:8px;">
+      ${x.forecast}
+    </div>
+  </div>`;
+});
+
+document.getElementById('daily').innerHTML = d;
+    
   }catch(err){
     document.getElementById('current').innerHTML='Error: '+err.message;
   }
