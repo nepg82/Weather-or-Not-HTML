@@ -86,6 +86,7 @@ zipInput.value = lastZip || '14108';
 
 function setZip(z){
   zipInput.value=z;
+  localStorage.setItem('weatherZip', z);
   loadWeather();
 }
 
