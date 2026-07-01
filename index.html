@@ -115,6 +115,28 @@ function weatherEmoji(text = "") {
 }
   
 const zipInput=document.getElementById('zip');
+
+const favKey = "weatherFavorites";
+
+function getFavorites(){
+  return JSON.parse(localStorage.getItem(favKey) || "[]");
+}
+
+function saveFavorites(favs){
+  localStorage.setItem(favKey, JSON.stringify(favs));
+}
+
+function addFavorite(){
+  const zip = zipInput.value.trim();
+  let favs = getFavorites();
+
+  if(!favs.some(f => f.zip === zip)){
+    favs.push({ name: zip, zip });
+    saveFavorites(favs);
+    renderFavorites();
+  }
+}
+  
 zipInput.value=localStorage.getItem('weatherZip') || '14108';
 
 function setZip(z){
