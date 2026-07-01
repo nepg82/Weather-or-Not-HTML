@@ -80,11 +80,6 @@ function addFavorite(){
     renderFavorites();
   }
 }
-
-function setZip(z){
-  zipInput.value=z;
-  loadWeather();
-}
   
 const lastZip = localStorage.getItem('weatherZip') || '14108';
 zipInput.value = lastZip || '14108';
