@@ -238,7 +238,6 @@ hourly.slice(0,24).forEach(p => {
 document.getElementById('hourly').innerHTML = h;
     
     let days = [];
-
 // Find the first daytime period that is NOT today.
 let i = daily.findIndex(p => {
   const d = new Date(p.startTime);
@@ -274,7 +273,8 @@ while (i >= 0 && i < daily.length - 1 && days.length < 7) {
         wind: day.windDirection + ' ' + day.windSpeed,
         forecast: day.shortForecast
       });
-    }
+    i += 2;
+}
 
 let d = '';
 
