@@ -238,9 +238,24 @@ hourly.slice(0,24).forEach(p => {
 document.getElementById('hourly').innerHTML = h;
     
     let days = [];
-    // Skip today (first period) and start from tomorrow
-    for(let i = 1; i < daily.length - 1 && days.length < 7; i += 2){
-      let day = daily[i];      // daytime
+
+// Find the first daytime period that is NOT today.
+let i = daily.findIndex(p => {
+  const d = new Date(p.startTime);
+  const now = new Date();
+
+  return (
+    p.isDaytime &&
+    (
+      d.getFullYear() !== now.getFullYear() ||
+      d.getMonth()    !== now.getMonth() ||
+      d.getDate()     !== now.getDate()
+    )
+  );
+});
+
+while (i >= 0 && i < daily.length - 1 && days.length < 7) {
+  let day = daily[i];      // daytime
       let night = daily[i+1];  // nighttime
 
       // Get short day name + date (e.g. "F 26")
