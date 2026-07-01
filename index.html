@@ -147,6 +147,12 @@ function addFavorite(){
   saveFavorites(favs);
   renderFavorites();
 }
+
+function deleteFavorite(zip){
+  const favs = getFavorites().filter(f => f.zip !== zip);
+  saveFavorites(favs);
+  renderFavorites();
+}
   
 const lastZip = localStorage.getItem('weatherZip') || '14108';
 zipInput.value = lastZip || '14108';
