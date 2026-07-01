@@ -299,16 +299,23 @@ function renderFavorites(){
 
   const isFav = favs.some(f => f.zip === current);
 
-  el.innerHTML =
-    favs.map(f => `
-      <a href="#" onclick="setZip('${f.zip}');return false;">
-        ★ ${f.name}
-      </a>
-    `).join("") +
-    (!isFav
-      ? ` <a href="#" onclick="addFavorite();return false;">＋ Add</a>`
-      : ` <span class="small">★ saved</span>`
-    );
+  let html = "";
+
+  favs.forEach(f => {
+    html += `
+      <a href="#" onclick="setZip('${f.zip}');return false;">★ ${f.name}</a>
+      <a href="#" onclick="deleteFavorite('${f.zip}');return false;" style="color:#f66;margin-right:12px;">✕</a>
+    `;
+  });
+
+  if(!isFav){
+    html += `<a href="#" onclick="addFavorite();return false;">＋ Add</a>`;
+  }
+  else{
+    html += `<span class="small">★ saved</span>`;
+  }
+
+  el.innerHTML = html;
 }
 
 renderFavorites();
