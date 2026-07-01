@@ -128,13 +128,24 @@ function saveFavorites(favs){
 
 function addFavorite(){
   const zip = zipInput.value.trim();
+
   let favs = getFavorites();
 
-  if(!favs.some(f => f.zip === zip)){
-    favs.push({ name: zip, zip });
-    saveFavorites(favs);
-    renderFavorites();
+  if(favs.some(f => f.zip === zip)){
+    return;
   }
+
+  const name = prompt("Favorite name:", zip);
+
+  if(name === null) return;          // User cancelled
+
+  favs.push({
+    name: name.trim() || zip,
+    zip
+  });
+
+  saveFavorites(favs);
+  renderFavorites();
 }
   
 const lastZip = localStorage.getItem('weatherZip') || '14108';
