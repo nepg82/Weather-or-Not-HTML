@@ -254,9 +254,12 @@ let i = daily.findIndex(p => {
 });
 
 while (i >= 0 && i < daily.length - 1 && days.length < 7) {
-  let day = daily[i];      // daytime
-      let night = daily[i+1];  // nighttime
+      let day = daily[i];
+      let night = daily[i + 1];
 
+      if (!night || night.isDaytime) {
+        night = null;
+      }
       // Get short day name + date (e.g. "F 26")
       let date = new Date(day.startTime);
       let dayLetter = date.toLocaleString('en-US', {weekday: 'narrow'});
