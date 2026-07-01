@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Weather Dashboard v4</title>
+<title>Weather or Not</title>
 <style>
 html,body{height:100%;margin:0}
 body{
@@ -22,11 +22,38 @@ a{color:#7db7ff;text-decoration:none;margin-right:12px}
  display:flex;align-items:center;gap:8px;
  padding:6px 0;border-bottom:1px solid #333;
 }
-.row img{width:36px;height:36px}
-.time{width:45px}
-.temp{width:50px}
-.rain{width:55px}
-.day{width:75px}
+
+.table-row{
+  display:grid;
+  grid-template-columns: 55px 70px 40px 70px 1fr;
+  align-items:center;
+  gap:8px;
+  padding:6px 0;
+  border-bottom:1px solid #333;
+}
+
+.table-row > :not(:last-child){
+  text-align:center;
+}
+  
+.table-header{
+  position: sticky;
+  top: 0;
+  background:#1e1e1e;
+  font-size:12px;
+  color:#aaa;
+  font-weight:bold;
+  z-index:5;
+  padding:4px 0;
+}
+
+.sky{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  font-size:24px;
+}
+  
 </style>
 
 <link rel="manifest" href="manifest.json">
@@ -48,16 +75,45 @@ ZIP:
 <div class="main">
   <div class="card panel">
     <h3>Next 24 Hours</h3>
+      <div class="table-row table-header">
+        <div>Time</div>
+        <div>Temp</div>
+        <div>Sky</div>
+        <div>Rain %</div>
+        <div>Wind</div>
+    </div>
     <div id="hourly" class="list"></div>
   </div>
 
   <div class="card panel">
     <h3>Next 7 Days</h3>
+    <div class="table-row table-header">
+        <div>Day</div>
+        <div>Hi/Lo</div>
+        <div>Sky</div>
+        <div>Rain %</div>
+        <div>Wind</div>
+    </div>
     <div id="daily" class="list"></div>
   </div>
 </div>
 
 <script>
+
+function weatherEmoji(text = "") {
+  text = text.toLowerCase();
+
+  if (text.includes("thunder")) return "⛈️";
+  if (text.includes("rain") || text.includes("showers")) return "🌧️";
+  if (text.includes("snow")) return "❄️";
+  if (text.includes("sleet") || text.includes("freezing")) return "🌨️";
+  if (text.includes("fog") || text.includes("mist")) return "🌫️";
+  if (text.includes("cloud")) return "☁️";
+  if (text.includes("sunny") || text.includes("clear")) return "☀️";
+
+  return "🌡️";
+}
+  
 const zipInput=document.getElementById('zip');
 
 const favKey = "weatherFavorites";
@@ -72,20 +128,37 @@ function saveFavorites(favs){
 
 function addFavorite(){
   const zip = zipInput.value.trim();
+
   let favs = getFavorites();
 
-  if(!favs.some(f => f.zip === zip)){
-    favs.push({ name: zip, zip });
-    saveFavorites(favs);
-    renderFavorites();
+  if(favs.some(f => f.zip === zip)){
+    return;
   }
+
+  const name = prompt("Favorite name:", zip);
+
+  if(name === null) return;          // User cancelled
+
+  favs.push({
+    name: name.trim() || zip,
+    zip
+  });
+
+  saveFavorites(favs);
+  renderFavorites();
+}
+
+function deleteFavorite(zip){
+  const favs = getFavorites().filter(f => f.zip !== zip);
+  saveFavorites(favs);
+  renderFavorites();
 }
   
 const lastZip = localStorage.getItem('weatherZip') || '14108';
 zipInput.value = lastZip || '14108';
 
 function setZip(z){
-  zipInput.value=z;
+  zipInput.value = z;
   localStorage.setItem('weatherZip', z);
   loadWeather();
 }
@@ -133,7 +206,7 @@ async function loadWeather(){
 
     document.getElementById('current').innerHTML=`
       <div style="display:flex; align-items:center; gap:16px;">
-        <img src="${hourly[0].icon}" width="64" height="64">
+        <div style="font-size:48px;">${weatherEmoji(hourly[0].shortForecast)}</div>
         <div style="font-size:32px; font-weight:bold; line-height:1;">${hourly[0].temperature}°F</div>
         
         <div style="flex:1; line-height:1.3;">
@@ -143,28 +216,50 @@ async function loadWeather(){
       </div>
     `;
 
-    let h='';
-    hourly.slice(0,24).forEach(p=>{
-      h+=`
-      <div class="row" style="flex-direction:column; align-items:stretch; gap:4px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <div class="time"><b>${shortHour(p.startTime)}</b></div>
-          <img src="${p.icon}">
-          <div class="temp">${p.temperature}°</div>
-          <div class="rain">${p.probabilityOfPrecipitation?.value || 0}%</div>
-          <div>${p.windDirection} ${p.windSpeed}</div>
-        </div>
-        <div class="small" style="padding-left: 53px;">${p.shortForecast}</div>
-      </div>`;
-    });
-    document.getElementById('hourly').innerHTML=h;
+let h = '';
+
+hourly.slice(0,24).forEach(p => {
+  h += `
+  <div>
+    <div class="table-row">
+      <div>${shortHour(p.startTime)}</div>
+      <div>${p.temperature}°</div>
+      <div class="sky">${weatherEmoji(p.shortForecast)}</div>
+      <div>${p.probabilityOfPrecipitation?.value || 0}%</div>
+      <div>${p.windDirection} ${p.windSpeed}</div>
+    </div>
+
+    <div class="small" style="padding:2px 0 6px 0; margin-left:8px;">
+      ${p.shortForecast}
+    </div>
+  </div>`;
+});
+
+document.getElementById('hourly').innerHTML = h;
     
     let days = [];
-    // Skip today (first period) and start from tomorrow
-    for(let i = 1; i < daily.length - 1 && days.length < 7; i += 2){
-      let day = daily[i];      // daytime
-      let night = daily[i+1];  // nighttime
+// Find the first daytime period that is NOT today.
+let i = daily.findIndex(p => {
+  const d = new Date(p.startTime);
+  const now = new Date();
 
+  return (
+    p.isDaytime &&
+    (
+      d.getFullYear() !== now.getFullYear() ||
+      d.getMonth()    !== now.getMonth() ||
+      d.getDate()     !== now.getDate()
+    )
+  );
+});
+
+while (i >= 0 && i < daily.length - 1 && days.length < 7) {
+      let day = daily[i];
+      let night = daily[i + 1];
+
+      if (!night || night.isDaytime) {
+        night = null;
+      }
       // Get short day name + date (e.g. "F 26")
       let date = new Date(day.startTime);
       let dayLetter = date.toLocaleString('en-US', {weekday: 'narrow'});
@@ -178,48 +273,67 @@ async function loadWeather(){
           day.probabilityOfPrecipitation?.value || 0,
           night?.probabilityOfPrecipitation?.value || 0
         ),
-        icon: day.icon,
         wind: day.windDirection + ' ' + day.windSpeed,
         forecast: day.shortForecast
       });
-    }
+    i += 2;
+}
 
-    let d = '';
-    days.forEach(x => {
-      d += `
-      <div class="row" style="flex-direction:column; align-items:stretch; gap:4px;">
-        <div style="display:flex; align-items:center; gap:8px;">
-          <div class="day"><b>${x.name}</b></div>
-          <img src="${x.icon}">
-          <div>${x.high}°/${x.low}°</div>
-          <div class="rain">${x.rain}%</div>
-          <div>${x.wind}</div>
-        </div>
-        <div class="small" style="padding-left: 85px;">${x.forecast}</div>
-      </div>`;
-    });
+let d = '';
 
-    document.getElementById('daily').innerHTML = d;
+days.forEach(x => {
+  d += `
+  <div>
+    <div class="table-row">
+      <div>${x.name}</div>
+      <div>${x.high}°/${x.low}°</div>
+      <div class="sky">${weatherEmoji(x.forecast)}</div>
+      <div>${x.rain}%</div>
+      <div>${x.wind}</div>
+    </div>
+
+    <div class="small" style="padding:2px 0 6px 0; margin-left:8px;">
+      ${x.forecast}
+    </div>
+  </div>`;
+});
+
+document.getElementById('daily').innerHTML = d;
+    
   }catch(err){
     document.getElementById('current').innerHTML='Error: '+err.message;
   }
+
+renderFavorites();
+  
 }
 
 function renderFavorites(){
   const el = document.getElementById("favorites");
+  if(!el) return;
+
   const favs = getFavorites();
   const current = zipInput.value.trim();
 
   const isFav = favs.some(f => f.zip === current);
 
-  el.innerHTML =
-    favs.map(f => `
+  let html = "";
+
+  favs.forEach(f => {
+    html += `
       <a href="#" onclick="setZip('${f.zip}');return false;">★ ${f.name}</a>
-    `).join("") +
-    (!isFav
-      ? ` <a href="#" onclick="addFavorite();return false;">＋ Add</a>`
-      : ` <span class="small">★ saved</span>`
-    );
+      <a href="#" onclick="deleteFavorite('${f.zip}');return false;" style="color:#f66;margin-right:12px;">✕</a>
+    `;
+  });
+
+  if(!isFav){
+    html += `<a href="#" onclick="addFavorite();return false;">＋ Add</a>`;
+  }
+  else{
+    html += `<span class="small">★ saved</span>`;
+  }
+
+  el.innerHTML = html;
 }
 
 renderFavorites();
