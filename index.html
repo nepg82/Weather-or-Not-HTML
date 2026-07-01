@@ -205,18 +205,22 @@ async function loadWeather(){
   }
 }
 
- function renderFavorites(){
+function renderFavorites(){
   const el = document.getElementById("favorites");
   const favs = getFavorites();
+  const current = zipInput.value.trim();
 
-  el.innerHTML = favs.map(f => `
-    <a href="#" onclick="setZip('${f.zip}');return false;">
-      ★ ${f.name}
-    </a>
-  `).join("") + `
-    <a href="#" onclick="addFavorite();return false;">＋ Add</a>
-  `;
- } 
+  const isFav = favs.some(f => f.zip === current);
+
+  el.innerHTML =
+    favs.map(f => `
+      <a href="#" onclick="setZip('${f.zip}');return false;">★ ${f.name}</a>
+    `).join("") +
+    (!isFav
+      ? ` <a href="#" onclick="addFavorite();return false;">＋ Add</a>`
+      : ` <span class="small">★ saved</span>`
+    );
+}
 
 renderFavorites();
 loadWeather();
