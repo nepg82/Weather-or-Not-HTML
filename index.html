@@ -231,6 +231,8 @@ async function loadWeather(){
 
     const lat=places[0].lat;
     const lon=places[0].lon;
+    currentLat = lat;
+    currentLon = lon;
 
     const point=await (await fetch(
       `https://api.weather.gov/points/${lat},${lon}`
@@ -249,6 +251,7 @@ async function loadWeather(){
     const locationName = addr.town || addr.city || addr.village || addr.county || 
                         places[0].display_name.split(',')[1]?.trim() || 
                         places[0].display_name;
+    currentLocation = locationName;
 
     document.getElementById('current').innerHTML=`
       <div style="display:flex; align-items:center; gap:16px;">
