@@ -385,6 +385,25 @@ function renderFavorites(){
   el.innerHTML = html;
 }
 
+function showRadar(){
+
+    document.getElementById("radarTitle").textContent =
+        "Radar — " + currentLocation;
+
+    document.getElementById("radarFrame").src =
+        `https://www.rainviewer.com/map.html?loc=${currentLat},${currentLon},8&oFa=1`;
+
+    document.getElementById("radarOverlay").style.display = "flex";
+}
+
+function hideRadar(){
+
+    document.getElementById("radarOverlay").style.display = "none";
+
+    // Stops the radar so it isn't still running in the background.
+    document.getElementById("radarFrame").src = "";
+}
+  
 renderFavorites();
 loadWeather();
 </script>
