@@ -106,6 +106,40 @@ ZIP:
   </div>
 </div>
 
+<div id="radarOverlay"
+     style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:#111;
+        z-index:9999;
+        flex-direction:column;
+     ">
+
+    <div style="
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        padding:10px;
+        background:#1e1e1e;
+        font-size:20px;
+    ">
+        <span id="radarTitle">Radar</span>
+
+        <button onclick="hideRadar()">✕</button>
+    </div>
+
+    <iframe
+        id="radarFrame"
+        style="
+            flex:1;
+            border:none;
+            width:100%;
+        ">
+    </iframe>
+
+</div>
+  
 <script>
 
 function weatherEmoji(text = "") {
