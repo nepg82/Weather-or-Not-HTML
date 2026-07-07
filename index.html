@@ -122,6 +122,10 @@ function weatherEmoji(text = "") {
   
 const zipInput=document.getElementById('zip');
 
+let currentLat = "";
+let currentLon = "";
+let currentLocation = "";
+
 const favKey = "weatherFavorites";
 
 function getFavorites(){
