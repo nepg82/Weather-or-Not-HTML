@@ -16,6 +16,6 @@ const FILES_TO_CACHE = [
   "/styles.css",
   "/script.js",
   "/manifest.json",
-  "/icons/app_icon_192.png",
-  "/icons/app_icon_512.png"
+  "/icons/app-icon-192.png",
+  "/icons/app-icon-512.png"
 ];
