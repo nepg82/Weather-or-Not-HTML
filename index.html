@@ -142,7 +142,7 @@ ZIP:
   
 <script>
 
-function weatherEmoji(text = "") {
+function weatherEmoji(text = "", isDaytime = true) {
   text = text.toLowerCase();
 
   if (text.includes("thunder")) return "⛈️";
@@ -151,7 +151,7 @@ function weatherEmoji(text = "") {
   if (text.includes("sleet") || text.includes("freezing")) return "🌨️";
   if (text.includes("fog") || text.includes("mist")) return "🌫️";
   if (text.includes("cloud")) return "☁️";
-  if (text.includes("sunny") || text.includes("clear")) return "☀️";
+  if (text.includes("sunny") || text.includes("clear")) return isDaytime ? "☀️" : "🌙";
 
   return "🌡️";
 }
@@ -263,7 +263,7 @@ async function loadWeather(){
 
     document.getElementById('current').innerHTML=`
       <div style="display:flex; align-items:center; gap:16px;">
-        <div style="font-size:48px;">${weatherEmoji(hourly[0].shortForecast)}</div>
+        <div style="font-size:48px;">${weatherEmoji(hourly[0].shortForecast, hourly[0].isDaytime)}</div>
         <div style="font-size:32px; font-weight:bold; line-height:1;">${hourly[0].temperature}°F</div>
         
         <div style="flex:1; line-height:1.3;">
@@ -281,7 +281,7 @@ hourly.slice(0,24).forEach(p => {
     <div class="table-row">
       <div>${shortHour(p.startTime)}</div>
       <div>${p.temperature}°</div>
-      <div class="sky">${weatherEmoji(p.shortForecast)}</div>
+      <div class="sky">${weatherEmoji(p.shortForecast, p.isDaytime)}</div>
       <div>${p.probabilityOfPrecipitation?.value || 0}%</div>
       <div>${p.windDirection} ${p.windSpeed}</div>
     </div>
@@ -344,7 +344,7 @@ days.forEach(x => {
     <div class="table-row">
       <div>${x.name}</div>
       <div>${x.high}°/${x.low}°</div>
-      <div class="sky">${weatherEmoji(x.forecast)}</div>
+      <div class="sky">${weatherEmoji(x.forecast, true)}</div>
       <div>${x.rain}%</div>
       <div>${x.wind}</div>
     </div>
